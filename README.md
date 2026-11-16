@@ -7,6 +7,8 @@ Windows 10/11 için akıllı dock. Görev çubuğunun yerine geçer; açık penc
 ## Özellikler
 
 - **Uygulamalar ve açık pencereler:** Sabitlenmiş uygulamalar ve çalışan pencereler görev çubuğundaki gibi görünür. Tıklayınca pencere öne gelir, tekrar tıklayınca küçülür. Microsoft Store uygulamalarının simgeleri de desteklenir.
+- **Pencere önizlemesi:** Simgenin üstüne gelince açık pencerelerin küçük görüntüleri çıkar. Pencere sayısı rozetle gösterilir, önizlemeden pencere kapatılabilir.
+- **Evcil hayvan:** Masaüstünde yaşayan bir kedi ya da köpek. Sürükleyip istediğin yere taşıyabilirsin. Tıklayınca zıplar, basılı tutunca sevilmiş gibi mırlar, fareni gözleriyle takip eder ve uzun süre dokunmazsan uyur.
 - **Spotify / müzik:** Albüm kapağı, şarkı, sanatçı ve ilerleme çubuğu Windows'un medya altyapısından okunur. Spotify Free'de de çalışır, API anahtarı gerekmez.
 - **AI kullanımı:**
   - Claude Code'un 5 saatlik token penceresini ve sıfırlanmaya kalan süreyi gösterir. Bunun için anahtar gerekmez, bilgisayardaki kayıtlardan okunur.
@@ -18,6 +20,8 @@ Windows 10/11 için akıllı dock. Görev çubuğunun yerine geçer; açık penc
 - **Güç menüsü:** Kilitle, uyku, oturumu kapat, yeniden başlat, kapat.
 - **Kontrol paneli:** 4 stil (Glass, Midnight, White, Black), hap ya da tam genişlik şekli, üst ya da alt konum, widget'ları açma/kapama ve sıralama.
 - **Windows ile uyum:** Dock, görev çubuğu gibi ekranda yer ayırır. Windows görev çubuğunu otomatik gizler, çıkınca eski haline getirir. Tam ekran oyun ve videolarda kendini gizler.
+
+![Evcil hayvanlar](docs/evcil-hayvan.png)
 
 ![Kontrol paneli](docs/kontrol-paneli.png)
 

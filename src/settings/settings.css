@@ -131,3 +131,10 @@ input:focus { border-color: var(--accent); }
 
 .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px); background: #23232e; border: 1px solid var(--border); padding: 10px 16px; border-radius: 10px; font-size: 13px; opacity: 0; transition: all .2s; pointer-events: none; box-shadow: 0 10px 30px rgba(0, 0, 0, .4); }
 .toast.show { opacity: 1; transform: translateX(-50%); }
+
+/* Evcil hayvan renkleri */
+.swatches { display: flex; gap: 10px; flex-shrink: 0; }
+.swatches button { width: 34px; height: 34px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; padding: 0; box-shadow: 0 0 0 1px var(--border); transition: transform .15s; }
+.swatches button:hover { transform: scale(1.08); }
+.swatches button.on { border-color: var(--accent); box-shadow: 0 0 0 2px var(--bg); }
+.item.col span { margin-top: 6px; }

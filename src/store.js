@@ -32,7 +32,8 @@ const DEFAULTS = {
     monthlyBudget: 50,         // USD, API harcaması için
     warnAt: 80                 // % — bu orana gelince uyarı ver
   },
-  timerMinutes: 25
+  timerMinutes: 25,
+  pet: { type: 'cat', color: 'orange', x: null, y: null }
 };
 
 const SECRET_KEYS = ['anthropicAdminKey', 'openaiAdminKey', 'spotifyTokens'];

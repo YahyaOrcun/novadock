@@ -16,8 +16,9 @@
       <a data-s="apps"><i>⬚</i>Uygulamalar</a>
       <a data-s="spotify"><i>♫</i>Spotify</a>
       <a data-s="ai"><i>✦</i>AI Kullanımı</a>
+      <a data-s="pet"><i>🐾</i>Evcil hayvan</a>
     </nav>
-    <div class="side-foot">v0.1.0</div>
+    <div class="side-foot">v0.2.0</div>
   </aside>
 
   <main id="main">
@@ -193,6 +194,38 @@
         </div>
       </div>
       <p class="fine">Anahtarlar Windows'un şifreleme altyapısıyla (DPAPI) şifrelenip sadece bu bilgisayarda saklanır, sadece Anthropic ve OpenAI'ın kendi sunucularına gönderilir.</p>
+    </section>
+    <!-- EVCİL HAYVAN -->
+    <section data-s="pet">
+      <h1>Evcil hayvan</h1>
+      <p class="lead">Masaüstünde yaşayan küçük bir dost. Sürükleyip istediğin yere taşıyabilirsin.</p>
+
+      <div class="group">
+        <div class="item">
+          <div><b>Hayvan</b><span>Kapalıyken masaüstünde görünmez.</span></div>
+          <div class="seg" data-bind="pet.type">
+            <button data-v="none">Kapalı</button><button data-v="cat">🐱 Kedi</button><button data-v="dog">🐶 Köpek</button>
+          </div>
+        </div>
+        <div class="item" data-show="pet.type">
+          <div><b>Renk</b><span id="pet-color-name"></span></div>
+          <div class="swatches" id="pet-colors"></div>
+        </div>
+        <div class="item">
+          <div><b>Konum</b><span>Ekran dışında kaldıysa ya da kaybolduysa dock'un üstüne geri getirir.</span></div>
+          <button class="btn" id="pet-reset">Konumu sıfırla</button>
+        </div>
+      </div>
+
+      <h3>Neler yapabilir?</h3>
+      <div class="group">
+        <div class="item col"><div>
+          <span>🖱️ <b>Tıkla:</b> Zıplar, kalpler çıkarır ve sana seslenir.</span>
+          <span>✋ <b>Basılı tut:</b> Sevildiğini anlar, gözlerini kapatıp mırlar ya da kuyruğunu sallar.</span>
+          <span>↔️ <b>Sürükle:</b> Ekranda istediğin yere taşı, bıraktığın yerde kalır.</span>
+          <span>👀 Fareni gözleriyle takip eder. Uzun süre dokunmazsan uyur, dokununca uyanır.</span>
+        </div></div>
+      </div>
     </section>
   </main>
 

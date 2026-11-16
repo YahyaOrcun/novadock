@@ -44,7 +44,13 @@ function bindAll() {
   document.querySelectorAll('[data-bind]').forEach(el => {
     const p = el.dataset.bind;
     if (el.classList.contains('seg') || el.classList.contains('styles')) {
-      el.querySelectorAll('button').forEach(b => b.onclick = () => update(patchFor(p, b.dataset.v)));
+      el.querySelectorAll('button').forEach(b => b.onclick = () => {
+        const patch = patchFor(p, b.dataset.v);
+        if (p === 'pet.type' && PET_COLORS[b.dataset.v] && !PET_COLORS[b.dataset.v].some(c => c[0] === (S.pet || {}).color)) {
+          patch.pet.color = PET_COLORS[b.dataset.v][0][0];
+        }
+        update(patch);
+      });
     } else if (el.type === 'checkbox') {
       el.onchange = () => update(patchFor(p, el.checked));
     } else if (el.type === 'range') {
@@ -88,7 +94,30 @@ function render() {
   });
   renderWidgets();
   renderSpotify();
+  renderPet();
 }
+
+const PET_COLORS = {
+  cat: [['orange', 'Turuncu tekir', 'linear-gradient(135deg,#f4a259,#d9782f)'], ['gray', 'Gri', 'linear-gradient(135deg,#9aa4ae,#717b86)'],
+        ['black', 'Kara', 'linear-gradient(135deg,#4a4a52,#26262c)'], ['white', 'Beyaz', 'linear-gradient(135deg,#ffffff,#ddd6cb)']],
+  dog: [['brown', 'Kahverengi', 'linear-gradient(135deg,#c88b55,#8f5b33)'], ['golden', 'Golden', 'linear-gradient(135deg,#e6b468,#c48b3c)'],
+        ['spotted', 'Benekli', 'linear-gradient(135deg,#f7f4ef 55%,#3b3533 55%)'], ['black', 'Siyah', 'linear-gradient(135deg,#3d3a3a 60%,#c9a27a 60%)']]
+};
+
+function renderPet() {
+  const p = S.pet || {};
+  const item = document.querySelector('[data-show="pet.type"]');
+  item.hidden = !p.type || p.type === 'none';
+  if (item.hidden) return;
+  const list = PET_COLORS[p.type] || [];
+  const cur = list.find(c => c[0] === p.color) || list[0];
+  document.getElementById('pet-color-name').textContent = cur ? cur[1] : '';
+  const box = document.getElementById('pet-colors');
+  box.innerHTML = list.map(([k, name, bg]) => `<button data-c="${k}" title="${name}" class="${cur && cur[0] === k ? 'on' : ''}" style="background:${bg}"></button>`).join('');
+  box.querySelectorAll('[data-c]').forEach(b => b.onclick = () => update({ pet: { color: b.dataset.c } }));
+}
+
+document.getElementById('pet-reset').onclick = async () => { await update({ pet: { x: null, y: null } }); toast('Konum sıfırlandı'); };
 
 function renderWidgets() {
   const box = document.getElementById('widget-list');

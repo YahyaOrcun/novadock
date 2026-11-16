@@ -56,6 +56,7 @@ function init() {
       GetForegroundWindow: user32.func('intptr_t __stdcall GetForegroundWindow()'),
       SetForegroundWindow: user32.func('bool __stdcall SetForegroundWindow(intptr_t hWnd)'),
       BringWindowToTop: user32.func('bool __stdcall BringWindowToTop(intptr_t hWnd)'),
+      PostMessageW: user32.func('bool __stdcall PostMessageW(intptr_t hWnd, uint32_t msg, uintptr_t wParam, intptr_t lParam)'),
       OpenProcess: kernel32.func('intptr_t __stdcall OpenProcess(uint32_t access, bool inherit, uint32_t pid)'),
       QueryFullProcessImageNameW: kernel32.func('bool __stdcall QueryFullProcessImageNameW(intptr_t h, uint32_t flags, void *buf, void *size)'),
       CloseHandle: kernel32.func('bool __stdcall CloseHandle(intptr_t h)'),
@@ -271,9 +272,9 @@ function listWindows() {
 }
 
 /** Pencereyi öne getirir; zaten öndeyse simge durumuna küçültür (görev çubuğu gibi). */
-function activateWindow(hwnd) {
+function activateWindow(hwnd, toggle = true) {
   if (!init()) return;
-  if (hwnd === lastForeground && !k.IsIconic(hwnd)) {
+  if (toggle && hwnd === lastForeground && !k.IsIconic(hwnd)) {
     k.ShowWindow(hwnd, SW_MINIMIZE);
     lastForeground = 0;
     return;
@@ -285,6 +286,12 @@ function activateWindow(hwnd) {
   k.SetForegroundWindow(hwnd);
   k.BringWindowToTop(hwnd);
   lastForeground = hwnd;
+}
+
+/** Pencereye kapanma isteği gönderir (kaydedilmemiş iş varsa uygulama kendisi sorar) */
+function closeWindow(hwnd) {
+  if (!init()) return;
+  k.PostMessageW(hwnd, 0x0010, 0, 0); // WM_CLOSE
 }
 
 // ---------- Pencere simgesi ----------
@@ -345,4 +352,4 @@ function windowIcon(hwnd) {
   return out;
 }
 
-module.exports = { isWin, listWindows, activateWindow, windowIcon, reserve, release, getTaskbarState, applyTaskbarMode, restoreTaskbar, mediaKey };
+module.exports = { isWin, listWindows, activateWindow, closeWindow, windowIcon, reserve, release, getTaskbarState, applyTaskbarMode, restoreTaskbar, mediaKey };

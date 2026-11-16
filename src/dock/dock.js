@@ -62,7 +62,7 @@ document.addEventListener('mouseleave', () => setIgnore(true));
 function closePop() {
   if (!openPop) return;
   openPop.el.remove();
-  document.querySelectorAll('.w.active').forEach(w => w.classList.remove('active'));
+  document.querySelectorAll('.w.active, .app.active').forEach(w => w.classList.remove('active'));
   openPop = null;
 }
 
@@ -161,16 +161,13 @@ widgets.apps = {
       const d = document.createElement('div');
       const active = g.wins.some(w => w.active);
       d.className = 'app' + (g.wins.length ? ' running' : '') + (active ? ' focused' : '');
+      const n = g.wins.length;
       d.innerHTML = (g.icon ? `<img src="${g.icon}" alt="">` : `<div class="fallback">${esc((g.name || '?')[0].toUpperCase())}</div>`)
-        + (g.wins.length ? `<span class="dot">${g.wins.length > 1 ? '<i></i>' : ''}</span>` : '');
-      const tip = () => {
-        if (!g.wins.length) return g.name;
-        const t = g.wins.find(w => w.active) || g.wins[0];
-        return g.wins.length > 1 ? `${t.title}  (+${g.wins.length - 1})` : t.title;
-      };
-      d.onmouseenter = () => showTip(d, tip());
-      d.onmouseleave = hideTip;
-      d.onclick = () => { hideTip(); this.click(g); setTimeout(() => this.update(el), 300); };
+        + (n ? `<span class="dots">${'<i></i>'.repeat(Math.min(n, 3))}</span>` : '')
+        + (n > 1 ? `<span class="count">${n}</span>` : '');
+      d.onmouseenter = () => { if (n) preview.hoverIn(d, g); else showTip(d, g.name); };
+      d.onmouseleave = () => { hideTip(); preview.hoverOut(); };
+      d.onclick = () => { hideTip(); preview.cancel(); this.click(g); setTimeout(() => this.update(el), 300); };
       el.appendChild(d);
     });
   },
@@ -183,6 +180,66 @@ widgets.apps = {
   }
 };
 
+// ---------- Pencere önizlemesi ----------
+const preview = {
+  timer: null, closeTimer: null,
+  isOpen() { return openPop && openPop.id.startsWith('preview:'); },
+  hoverIn(anchor, g) {
+    clearTimeout(this.closeTimer);
+    if (openPop && openPop.id === 'preview:' + g.key) return;
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => this.open(anchor, g), this.isOpen() ? 60 : 450);
+  },
+  hoverOut() {
+    clearTimeout(this.timer);
+    clearTimeout(this.closeTimer);
+    this.closeTimer = setTimeout(() => { if (this.isOpen()) closePop(); }, 280);
+  },
+  cancel() {
+    clearTimeout(this.timer); clearTimeout(this.closeTimer);
+    if (this.isOpen()) closePop();
+  },
+  open(anchor, g) {
+    hideTip();
+    if (openPop) closePop();
+    const cols = Math.min(g.wins.length, 4);
+    togglePop('preview:' + g.key, anchor, pop => this.render(pop, g), cols * 208 + 16);
+    const pop = openPop.el;
+    pop.classList.add('preview');
+    pop.onmouseenter = () => clearTimeout(this.closeTimer);
+    pop.onmouseleave = () => this.hoverOut();
+    api.windows.thumbs(g.wins.map(w => w.hwnd)).then(map => {
+      if (!openPop || openPop.el !== pop) return;
+      for (const card of pop.querySelectorAll('.pv-card')) {
+        const url = map[card.dataset.h];
+        const t = card.querySelector('.thumb');
+        t.innerHTML = url ? `<img src="${url}" alt="">` : `<span class="muted">${card.dataset.min === '1' ? 'Simge durumunda' : 'Önizleme yok'}</span>`;
+      }
+    });
+  },
+  render(pop, g) {
+    pop.innerHTML = `<div class="pv-grid" style="grid-template-columns:repeat(${Math.min(g.wins.length, 4)},200px)">${g.wins.map(w => `
+      <div class="pv-card ${w.active ? 'on' : ''}" data-h="${w.hwnd}" data-min="${w.minimized ? 1 : 0}">
+        <div class="pv-head">${g.icon ? `<img src="${g.icon}" alt="">` : ''}<span>${esc(w.title)}</span><button class="pv-x" title="Pencereyi kapat">×</button></div>
+        <div class="thumb"><div class="spin"></div></div>
+      </div>`).join('')}</div>`;
+    pop.querySelectorAll('.pv-card').forEach(c => {
+      const h = Number(c.dataset.h);
+      c.onclick = e => {
+        if (e.target.closest('.pv-x')) return;
+        closePop();
+        api.windows.activate(h, false);
+      };
+      c.querySelector('.pv-x').onclick = e => {
+        e.stopPropagation();
+        api.windows.close(h);
+        c.classList.add('closing');
+        setTimeout(() => { c.remove(); if (!pop.querySelector('.pv-card')) closePop(); }, 350);
+      };
+    });
+  }
+};
+
 // ---------- Spotify ----------
 widgets.spotify = {
   state: null,
@@ -190,13 +247,12 @@ widgets.spotify = {
     el.className = 'w w-spotify';
     el.innerHTML = `
       <div class="art">${I.note}</div>
-      <div class="stack"><div class="value">Spotify</div><div class="label">Bağlanıyor…</div></div>
+      <div class="stack"><div class="value">Spotify</div><div class="label">Bağlanıyor…</div><div class="progress" hidden><i></i></div></div>
       <div class="controls">
         <button class="icon-btn" data-a="prev" title="Önceki">${I.prev}</button>
         <button class="icon-btn big" data-a="toggle" title="Oynat / Duraklat">${I.play}</button>
         <button class="icon-btn" data-a="next" title="Sonraki">${I.next}</button>
-      </div>
-      <div class="progress" hidden><i></i></div>`;
+      </div>`;
     el.querySelectorAll('[data-a]').forEach(b => b.onclick = async ev => {
       ev.stopPropagation();
       let a = b.dataset.a;

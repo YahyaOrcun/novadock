@@ -40,7 +40,16 @@ contextBridge.exposeInMainWorld('nova', {
   },
   windows: {
     list: () => ipcRenderer.invoke('windows:list'),
-    activate: (hwnd) => ipcRenderer.invoke('windows:activate', hwnd)
+    activate: (hwnd, toggle = true) => ipcRenderer.invoke('windows:activate', hwnd, toggle),
+    close: (hwnd) => ipcRenderer.invoke('windows:close', hwnd),
+    thumbs: (hwnds) => ipcRenderer.invoke('windows:thumbs', hwnds)
+  },
+  pet: {
+    config: () => ipcRenderer.invoke('pet:config'),
+    onConfig: on('pet:config'),
+    setIgnore: (v) => ipcRenderer.invoke('pet:setIgnore', v),
+    move: (x, y) => ipcRenderer.invoke('pet:move', x, y),
+    save: () => ipcRenderer.invoke('pet:save')
   },
   notify: (title, body) => ipcRenderer.invoke('notify', title, body)
 });

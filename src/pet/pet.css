@@ -1,0 +1,119 @@
+html, body {
+  margin: 0; height: 100%; background: transparent; overflow: hidden;
+  user-select: none; font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+}
+#pet { position: absolute; inset: 0; --tilt: 0deg; }
+
+.stage { position: absolute; left: 50%; bottom: 0; width: 140px; height: 140px; transform: translateX(-50%); }
+.inner { width: 100%; height: 100%; transform-origin: 50% 100%; }
+.inner svg { width: 100%; height: 100%; overflow: visible; display: block; cursor: grab; }
+#pet.dragging .inner svg { cursor: grabbing; }
+
+/* Renkler */
+.main { fill: var(--main); }
+.light { fill: var(--light); }
+.dark { fill: var(--dark); }
+.inner-ear { fill: var(--inner); }
+.pupil { fill: #2b2320; }
+.glint { fill: #fff; }
+.nose { fill: var(--nose); }
+.shadow { fill: rgba(0, 0, 0, .22); }
+.line, .eyes path, .mouth { fill: none; stroke: #2b2320; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.whiskers path { fill: none; stroke: #2b2320; stroke-width: 1.3; stroke-linecap: round; opacity: .5; }
+.stripes path { fill: none; stroke: var(--dark); stroke-width: 3.2; stroke-linecap: round; }
+.blush { fill: #ff8fa3; opacity: .18; transition: opacity .3s; }
+.tongue { fill: #ff7b93; opacity: 0; transition: opacity .2s; }
+
+/* Parçaların dönme noktaları */
+.body-g, .head-g, .tail-wrap, .lid, .ear, .paw { transform-box: fill-box; }
+.body-g { transform-origin: 50% 100%; animation: breathe 3.2s ease-in-out infinite; }
+.head-g { transform-origin: 50% 90%; transition: transform .45s cubic-bezier(.3, 1.4, .5, 1); }
+.lid { transform-origin: 50% 50%; transition: transform .08s; }
+.look { transition: transform .12s; }
+.ear { transform-origin: 50% 100%; transition: transform .15s; }
+.paw { transition: transform .2s; }
+.cat .tail-wrap { transform-origin: 0% 100%; animation: sway 3.4s ease-in-out infinite; }
+.dog .tail-wrap { transform-origin: 0% 100%; animation: wag 1.2s ease-in-out infinite; }
+
+@keyframes breathe { 50% { transform: scaleY(1.03); } }
+@keyframes sway { 0%, 100% { transform: rotate(-7deg); } 50% { transform: rotate(9deg); } }
+@keyframes wag { 0%, 100% { transform: rotate(-12deg); } 50% { transform: rotate(14deg); } }
+
+/* Göz kırpma, kulak oynatma */
+#pet.blink .lid { transform: scaleY(.08); }
+#pet.twitch .ear-l { transform: rotate(-14deg); }
+.dog#pet.twitch .ear-l { transform: rotate(10deg); }
+
+/* Göz durumları */
+.eyes.closed, .eyes.happy { opacity: 0; transition: opacity .15s; }
+.eyes.open { transition: opacity .15s; }
+#pet.happy .eyes.open, #pet.petting .eyes.open, #pet.sleep .eyes.open { opacity: 0; }
+#pet.happy .eyes.happy, #pet.petting .eyes.happy { opacity: 1; }
+#pet.sleep .eyes.closed { opacity: 1; }
+#pet.happy .blush, #pet.petting .blush { opacity: .6; }
+#pet.happy .tongue, #pet.petting .tongue { opacity: 1; }
+
+/* Tıklayınca zıplama */
+#pet.happy .inner { animation: hop .75s cubic-bezier(.3, .7, .4, 1); }
+@keyframes hop {
+  0% { transform: none; }
+  15% { transform: scale(1.1, .88); }
+  45% { transform: translateY(-30px) scale(.94, 1.07); }
+  72% { transform: scale(1.08, .92); }
+  100% { transform: none; }
+}
+#pet.happy.dog .tail-wrap, #pet.petting.dog .tail-wrap { animation-duration: .22s; }
+
+/* Sevilirken */
+#pet.petting .head-g { animation: nuzzle 1.3s ease-in-out infinite; }
+#pet.petting .ear { transform: rotate(0deg) scaleY(.85); }
+@keyframes nuzzle { 0%, 100% { transform: rotate(-7deg); } 50% { transform: rotate(7deg); } }
+#pet.petting.cat .tail-wrap { animation-duration: 1.6s; }
+
+/* Taşınırken */
+#pet.dragging .inner { transform-origin: 50% 20%; transform: rotate(var(--tilt)) translateY(-6px); transition: transform .12s; }
+#pet.dragging .paw { transform: translateY(6px) scaleY(1.15); }
+#pet.dragging .lid { transform: scale(1.15); }
+#pet.dragging .shadow { opacity: 0; }
+
+/* Bırakınca */
+#pet.land .inner { animation: land .4s cubic-bezier(.3, 1.5, .5, 1); }
+@keyframes land { 0% { transform: scale(1.12, .84); } 100% { transform: none; } }
+
+/* Uyku */
+#pet.sleep .head-g { transform: translateY(7px) rotate(-5deg); }
+#pet.sleep .body-g { animation-duration: 5.5s; }
+#pet.sleep .tail-wrap { animation-play-state: paused; }
+
+/* Efektler */
+.fx { position: absolute; inset: 0; pointer-events: none; }
+.heart {
+  position: absolute; font-size: 18px; color: #ff5d7a; text-shadow: 0 2px 6px rgba(0, 0, 0, .25);
+  animation: rise 1.3s ease-out forwards;
+}
+@keyframes rise {
+  0% { transform: translate(0, 0) scale(.4); opacity: 0; }
+  15% { opacity: 1; transform: translate(0, -8px) scale(1.1); }
+  100% { transform: translate(var(--dx), -70px) scale(.8); opacity: 0; }
+}
+.zzz {
+  position: absolute; font-weight: 800; color: #b9c3ff; text-shadow: 0 2px 6px rgba(0, 0, 0, .35);
+  animation: zz 2.4s ease-in-out infinite;
+}
+@keyframes zz {
+  0% { transform: translate(0, 0) scale(.6); opacity: 0; }
+  30% { opacity: 1; }
+  100% { transform: translate(18px, -40px) scale(1.1); opacity: 0; }
+}
+
+.bubble {
+  position: absolute; left: 50%; top: 4px; transform: translateX(-50%) scale(.6);
+  padding: 5px 11px; border-radius: 12px; background: #fff; color: #2b2320;
+  font-size: 13px; font-weight: 700; white-space: nowrap; opacity: 0; pointer-events: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .25); transition: opacity .18s, transform .25s cubic-bezier(.3, 1.6, .5, 1);
+}
+.bubble::after {
+  content: ""; position: absolute; left: 50%; bottom: -5px; width: 10px; height: 10px; background: #fff;
+  transform: translateX(-50%) rotate(45deg); border-radius: 2px;
+}
+.bubble.show { opacity: 1; transform: translateX(-50%) scale(1); }

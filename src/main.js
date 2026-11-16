@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, screen, Tray, Menu, nativeImage, shell, dialog, Notification } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, Tray, Menu, nativeImage, shell, dialog, Notification, desktopCapturer } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const store = require('./store');
@@ -14,6 +14,7 @@ const POPOVER_SPACE = 420; // Dock'un üstünde/altında açılan paneller için
 let dock = null;
 let settingsWin = null;
 let tray = null;
+let pet = null;
 let dockVisible = true;
 
 if (!app.requestSingleInstanceLock()) {
@@ -104,7 +105,51 @@ function toggleDock(force) {
   dockVisible = typeof force === 'boolean' ? force : !dockVisible;
   if (dockVisible) { dock.showInactive(); applyTaskbar(); layoutDock(); }
   else { dock.hide(); win32.release(); restoreTaskbar(); }
+  createPet();
   buildTrayMenu();
+}
+
+// ---------------- Evcil hayvan ----------------
+const PET_W = 170, PET_H = 200;
+
+function petDefaultPos() {
+  const wa = screen.getPrimaryDisplay().workArea;
+  return { x: wa.x + wa.width - PET_W - 60, y: wa.y + wa.height - PET_H + 6 };
+}
+
+function clampToScreen(x, y) {
+  const d = screen.getDisplayNearestPoint({ x: x + PET_W / 2, y: y + PET_H / 2 });
+  const b = d.bounds;
+  return {
+    x: Math.max(b.x - 40, Math.min(b.x + b.width - PET_W + 40, x)),
+    y: Math.max(b.y - 40, Math.min(b.y + b.height - PET_H + 10, y))
+  };
+}
+
+function createPet() {
+  const cfg = store.get().pet || {};
+  if (!cfg.type || cfg.type === 'none' || !dockVisible) {
+    if (pet) { pet.destroy(); pet = null; }
+    return;
+  }
+  const pos = cfg.x == null || cfg.y == null ? petDefaultPos() : clampToScreen(cfg.x, cfg.y);
+  if (pet) {
+    pet.setPosition(pos.x, pos.y);
+    pet.webContents.send('pet:config', cfg);
+    return;
+  }
+  pet = new BrowserWindow({
+    width: PET_W, height: PET_H, x: pos.x, y: pos.y,
+    frame: false, transparent: true, resizable: false, movable: true,
+    minimizable: false, maximizable: false, skipTaskbar: true, hasShadow: false,
+    alwaysOnTop: true, focusable: false, show: false, backgroundColor: '#00000000',
+    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false }
+  });
+  pet.setAlwaysOnTop(true, 'pop-up-menu');
+  pet.setIgnoreMouseEvents(true, { forward: true });
+  pet.loadFile(path.join(__dirname, 'pet', 'index.html'));
+  pet.once('ready-to-show', () => pet && pet.showInactive());
+  pet.on('closed', () => { pet = null; });
 }
 
 // ---------------- Windows görev çubuğu ----------------
@@ -176,16 +221,31 @@ function broadcast(channel, payload) {
 
 // ---------------- Uygulamalar ----------------
 const iconCache = new Map();
+const expandEnv = p => (p || '').replace(/%([^%]+)%/g, (m, v) => process.env[v] || process.env[v.toUpperCase()] || m);
+const WINDIR = process.env.SystemRoot || process.env.windir || 'C:\\Windows';
+const isExplorerLink = p => /(file explorer|dosya gezgini|explorer)\.lnk$/i.test(p);
+
+// Kısayolun gerçek hedefini ve simgesini çöz (ortam değişkenleri, Dosya Gezgini gibi özel kısayollar)
+function resolveShortcut(p) {
+  const out = { target: null, icon: null };
+  if (process.platform !== 'win32' || !p.toLowerCase().endsWith('.lnk')) return out;
+  try {
+    const link = shell.readShortcutLink(p);
+    const target = expandEnv(link.target);
+    const icon = expandEnv(link.icon);
+    if (target && fs.existsSync(target)) out.target = target;
+    if (icon && fs.existsSync(icon)) out.icon = icon;
+  } catch {}
+  if (!out.target && isExplorerLink(p)) out.target = path.join(WINDIR, 'explorer.exe');
+  return out;
+}
 
 async function iconFor(p) {
   if (iconCache.has(p)) return iconCache.get(p);
   let target = p;
   if (process.platform === 'win32' && p.toLowerCase().endsWith('.lnk')) {
-    try {
-      const link = shell.readShortcutLink(p);
-      if (link.icon && fs.existsSync(link.icon)) target = link.icon;
-      else if (link.target && fs.existsSync(link.target)) target = link.target;
-    } catch {}
+    const r = resolveShortcut(p);
+    target = r.icon || r.target || p;
   }
   let url = null;
   for (const t of [target, p]) {
@@ -200,7 +260,8 @@ async function iconFor(p) {
 
 function targetExe(p) {
   if (process.platform === 'win32' && p.toLowerCase().endsWith('.lnk')) {
-    try { const t = shell.readShortcutLink(p).target; if (t) return t.toLowerCase(); } catch {}
+    const t = resolveShortcut(p).target;
+    if (t) return t.toLowerCase();
   }
   return p.toLowerCase();
 }
@@ -329,8 +390,23 @@ function registerIpc() {
       if (patch.taskbarMode === 'none') restoreTaskbar(); else applyTaskbar();
     }
     layoutDock();
+    if (patch.pet) createPet();
     broadcast('settings:changed', next);
     return next;
+  });
+
+  // Evcil hayvan
+  ipcMain.handle('pet:config', () => store.get().pet);
+  ipcMain.handle('pet:setIgnore', (_e, v) => { if (pet) pet.setIgnoreMouseEvents(!!v, { forward: true }); });
+  ipcMain.handle('pet:move', (_e, x, y) => {
+    if (!pet) return;
+    const p = clampToScreen(Math.round(x), Math.round(y));
+    pet.setPosition(p.x, p.y);
+  });
+  ipcMain.handle('pet:save', () => {
+    if (!pet) return;
+    const [x, y] = pet.getPosition();
+    store.update({ pet: { x, y } });
   });
 
   ipcMain.handle('settings:setSecret', (_e, key, value) => {
@@ -396,10 +472,34 @@ function registerIpc() {
     return true;
   });
   ipcMain.handle('windows:list', () => openWindows());
-  ipcMain.handle('windows:activate', (_e, hwnd) => {
+  ipcMain.handle('windows:activate', (_e, hwnd, toggle = true) => {
     if (!lastWindowIds.has(hwnd)) return false; // sadece listelenen pencereler
-    win32.activateWindow(hwnd);
+    win32.activateWindow(hwnd, toggle !== false);
     return true;
+  });
+  ipcMain.handle('windows:close', (_e, hwnd) => {
+    if (!lastWindowIds.has(hwnd)) return false;
+    win32.closeWindow(hwnd);
+    return true;
+  });
+  // Pencere önizlemeleri: { hwnd: dataURL }
+  ipcMain.handle('windows:thumbs', async (_e, hwnds) => {
+    const want = new Set((hwnds || []).filter(h => lastWindowIds.has(h)));
+    if (!want.size) return {};
+    try {
+      const sources = await desktopCapturer.getSources({ types: ['window'], thumbnailSize: { width: 360, height: 220 }, fetchWindowIcons: false });
+      const out = {};
+      for (const src of sources) {
+        const m = /^window:(\d+):/.exec(src.id);
+        if (!m) continue;
+        const h = Number(m[1]);
+        if (want.has(h) && !src.thumbnail.isEmpty()) out[h] = 'data:image/jpeg;base64,' + src.thumbnail.toJPEG(82).toString('base64');
+      }
+      return out;
+    } catch (e) {
+      console.error('[thumbs]', e.message);
+      return {};
+    }
   });
   ipcMain.handle('apps:add', async () => {
     const r = await dialog.showOpenDialog(settingsWin || undefined, {
@@ -437,9 +537,10 @@ app.whenReady().then(() => {
   applyTaskbar();
   createDock();
   createTray();
+  createPet();
   screen.on('display-metrics-changed', () => layoutDock());
   screen.on('display-added', () => layoutDock());
-  screen.on('display-removed', () => layoutDock());
+  screen.on('display-removed', () => { layoutDock(); createPet(); });
   setInterval(checkAiWarnings, 2 * 60 * 1000);
   setTimeout(checkAiWarnings, 15000);
   // İlk açılışta kontrol panelini göster

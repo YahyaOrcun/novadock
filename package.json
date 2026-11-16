@@ -1,7 +1,7 @@
 {
   "name": "novadock",
   "productName": "NovaDock",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Windows için akıllı dock: AI kullanımı, Spotify, sistem ve uygulama widget'ları",
   "main": "src/main.js",
   "author": "YahyaOrcun",
