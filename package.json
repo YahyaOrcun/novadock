@@ -1,0 +1,36 @@
+{
+  "name": "novadock",
+  "productName": "NovaDock",
+  "version": "0.1.0",
+  "description": "Windows için akıllı dock: AI kullanımı, Spotify, sistem ve uygulama widget'ları",
+  "main": "src/main.js",
+  "author": "YahyaOrcun",
+  "license": "MIT",
+  "scripts": {
+    "postinstall": "node node_modules/electron/install.js",
+    "start": "electron .",
+    "dist": "electron-builder --win nsis --x64"
+  },
+  "dependencies": {
+    "koffi": "^2.9.0"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "app.novadock",
+    "productName": "NovaDock",
+    "electronDist": "node_modules/electron/dist",
+    "files": ["src/**/*", "assets/**/*", "package.json"],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    }
+  }
+}

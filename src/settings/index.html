@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'">
+  <title>NovaDock — Kontrol Paneli</title>
+  <link rel="stylesheet" href="settings.css">
+</head>
+<body>
+  <aside class="side">
+    <div class="brand"><div class="logo"></div><div><b>NovaDock</b><span>Kontrol Paneli</span></div></div>
+    <nav id="nav">
+      <a data-s="general" class="on"><i>⚙</i>Genel</a>
+      <a data-s="look"><i>◐</i>Görünüm</a>
+      <a data-s="widgets"><i>▦</i>Widget'lar</a>
+      <a data-s="apps"><i>⬚</i>Uygulamalar</a>
+      <a data-s="spotify"><i>♫</i>Spotify</a>
+      <a data-s="ai"><i>✦</i>AI Kullanımı</a>
+    </nav>
+    <div class="side-foot">v0.1.0</div>
+  </aside>
+
+  <main id="main">
+
+    <!-- GENEL -->
+    <section data-s="general" class="on">
+      <h1>Genel</h1>
+      <p class="lead">Dock'un ekrandaki yeri ve Windows ile nasıl çalışacağı.</p>
+
+      <div class="group">
+        <div class="item">
+          <div><b>Konum</b><span>Dock ekranın altında mı üstünde mi dursun?</span></div>
+          <div class="seg" data-bind="position">
+            <button data-v="bottom">Alt</button><button data-v="top">Üst</button>
+          </div>
+        </div>
+        <div class="item">
+          <div><b>Ekranda yer ayır</b><span>Açıkken büyütülmüş pencereler dock'un altına girmez, tıpkı görev çubuğu gibi.</span></div>
+          <label class="sw"><input type="checkbox" data-bind="reserveSpace"><i></i></label>
+        </div>
+        <div class="item">
+          <div><b>Windows görev çubuğu</b><span>NovaDock çalışırken Windows'un kendi görev çubuğu ne yapsın? Çıkınca eski haline döner.</span></div>
+          <div class="seg" data-bind="taskbarMode">
+            <button data-v="none">Göster</button><button data-v="autohide">Otomatik gizle</button><button data-v="hide">Tamamen gizle</button>
+          </div>
+        </div>
+        <div class="item">
+          <div><b>Windows ile başlat</b><span>Bilgisayar açılınca NovaDock otomatik çalışsın.</span></div>
+          <label class="sw"><input type="checkbox" data-bind="launchAtStartup"><i></i></label>
+        </div>
+      </div>
+    </section>
+
+    <!-- GÖRÜNÜM -->
+    <section data-s="look">
+      <h1>Görünüm</h1>
+      <p class="lead">Dock stilini ve şeklini seç. Değişiklikler anında uygulanır.</p>
+
+      <h3>Stil</h3>
+      <div class="styles" data-bind="style">
+        <button data-v="glass"><div class="pv pv-glass"><span></span><span></span><span></span></div>Glass</button>
+        <button data-v="midnight"><div class="pv pv-midnight"><span></span><span></span><span></span></div>Midnight</button>
+        <button data-v="white"><div class="pv pv-white"><span></span><span></span><span></span></div>White</button>
+        <button data-v="black"><div class="pv pv-black"><span></span><span></span><span></span></div>Black</button>
+      </div>
+
+      <div class="group">
+        <div class="item">
+          <div><b>Şekil</b><span>Ortada yüzen hap şeklinde ya da ekranı boydan boya kaplayan çubuk.</span></div>
+          <div class="seg" data-bind="layout">
+            <button data-v="pill">Hap</button><button data-v="full">Tam genişlik</button>
+          </div>
+        </div>
+        <div class="item">
+          <div><b>Yükseklik</b><span><output id="h-out">56</output> px</span></div>
+          <input type="range" min="44" max="72" step="2" data-bind="height" class="range">
+        </div>
+      </div>
+    </section>
+
+    <!-- WIDGET'LAR -->
+    <section data-s="widgets">
+      <h1>Widget'lar</h1>
+      <p class="lead">Hangi widget'lar görünsün ve hangi sırayla? Okları kullanarak sırala.</p>
+      <div class="group" id="widget-list"></div>
+    </section>
+
+    <!-- UYGULAMALAR -->
+    <section data-s="apps">
+      <h1>Uygulamalar</h1>
+      <p class="lead">Dock'a sabitlenmiş uygulamalar. Simgeye tıklayınca açılır.</p>
+      <div class="group" style="margin-bottom:16px">
+        <div class="item">
+          <div><b>Açık pencereleri göster</b><span>Çalışan uygulamalar Windows görev çubuğundaki gibi dock'ta görünür. Tıklayınca öne gelir, tekrar tıklayınca küçülür.</span></div>
+          <label class="sw"><input type="checkbox" data-bind="showOpenWindows"><i></i></label>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="app-add">+ Uygulama ekle</button>
+        <button class="btn" id="app-import">Görev çubuğundakileri içe aktar</button>
+      </div>
+      <div class="group" id="app-list"></div>
+    </section>
+
+    <!-- SPOTIFY -->
+    <section data-s="spotify">
+      <h1>Spotify</h1>
+      <p class="lead">Çalan şarkıyı gösterir; oynat, duraklat, ileri ve geri sar.</p>
+
+      <div class="group">
+        <div class="item col">
+          <div><b>Basit mod <em class="tag ok">Kurulum yok</em></b>
+          <span>Spotify masaüstü uygulaması açıksa şarkı adı ve sanatçı otomatik görünür. Kontroller Windows medya tuşlarıyla çalışır, Free hesapta da olur. Ekstra bir şey yapmana gerek yok.</span></div>
+        </div>
+      </div>
+
+      <h3>Gelişmiş mod: albüm kapağı ve ilerleme çubuğu</h3>
+      <div class="group">
+        <div class="item col">
+          <div><b>Kurulum</b>
+          <ol class="steps">
+            <li><a href="#" data-url="https://developer.spotify.com/dashboard">developer.spotify.com/dashboard</a> adresinde <b>Create app</b> de.</li>
+            <li>Redirect URI olarak şunu ekle: <code id="redirect-uri">http://127.0.0.1:8974/callback</code> <button class="mini" id="copy-uri">Kopyala</button></li>
+            <li>“Web API” kutusunu işaretle, kaydet. Client ID'yi aşağıya yapıştır.</li>
+          </ol>
+          <span class="warn">Not: Spotify, geliştirici modundaki uygulamalarda hesap sahibinin Premium olmasını şart koşuyor. Premium değilsen basit mod kullanmaya devam et.</span>
+          </div>
+        </div>
+        <div class="item">
+          <div><b>Client ID</b><span id="sp-status">Bağlı değil</span></div>
+          <div class="inline">
+            <input type="text" id="sp-client" placeholder="ör. 3f2a9c…" spellcheck="false">
+            <button class="btn primary" id="sp-connect">Bağlan</button>
+            <button class="btn" id="sp-disconnect" hidden>Bağlantıyı kes</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- AI -->
+    <section data-s="ai">
+      <h1>AI Kullanımı</h1>
+      <p class="lead">Token ve harcamanı takip et, limite yaklaşınca bildirim al.</p>
+
+      <h3>Claude Code</h3>
+      <div class="group">
+        <div class="item">
+          <div><b>Claude Code kullanımını izle <em class="tag ok">Anahtar gerekmez</em></b>
+          <span>Bilgisayarındaki Claude Code oturum kayıtlarından (<code>~/.claude/projects</code>) 5 saatlik penceredeki token kullanımını ve sıfırlanmaya kalan süreyi hesaplar. Veriler bilgisayardan çıkmaz.</span></div>
+          <label class="sw"><input type="checkbox" data-bind="ai.claudeCode"><i></i></label>
+        </div>
+        <div class="item">
+          <div><b>5 saatlik token limiti</b><span>Planına göre kendi belirlediğin bir üst sınır. Yüzde göstergesi ve uyarı için kullanılır. 0 = kapalı.</span></div>
+          <input type="number" min="0" step="10000" data-bind="ai.claudeCodeTokenLimit" class="num" placeholder="ör. 2000000">
+        </div>
+      </div>
+
+      <h3>API harcaması</h3>
+      <div class="group">
+        <div class="item">
+          <div><b>Anthropic (Claude API)</b><span>Console'dan bir <b>Admin API</b> anahtarı gerekir (<code>sk-ant-admin…</code>). Normal API anahtarı çalışmaz.</span></div>
+          <label class="sw"><input type="checkbox" data-bind="ai.anthropic"><i></i></label>
+        </div>
+        <div class="item sub" data-show="ai.anthropic">
+          <div><b>Admin anahtarı</b><span data-has="anthropicAdminKey">Kaydedilmedi</span></div>
+          <div class="inline">
+            <input type="password" data-secret="anthropicAdminKey" placeholder="sk-ant-admin01-…" spellcheck="false">
+            <button class="btn" data-save-secret="anthropicAdminKey">Kaydet</button>
+          </div>
+        </div>
+        <div class="item">
+          <div><b>OpenAI</b><span>Organization ayarlarından bir <b>Admin key</b> gerekir (<code>sk-admin-…</code>).</span></div>
+          <label class="sw"><input type="checkbox" data-bind="ai.openai"><i></i></label>
+        </div>
+        <div class="item sub" data-show="ai.openai">
+          <div><b>Admin anahtarı</b><span data-has="openaiAdminKey">Kaydedilmedi</span></div>
+          <div class="inline">
+            <input type="password" data-secret="openaiAdminKey" placeholder="sk-admin-…" spellcheck="false">
+            <button class="btn" data-save-secret="openaiAdminKey">Kaydet</button>
+          </div>
+        </div>
+        <div class="item">
+          <div><b>Aylık bütçe (USD)</b><span>Toplam API harcaması bu tutara göre yüzde olarak gösterilir.</span></div>
+          <input type="number" min="0" step="5" data-bind="ai.monthlyBudget" class="num">
+        </div>
+      </div>
+
+      <h3>Uyarılar</h3>
+      <div class="group">
+        <div class="item">
+          <div><b>Uyarı eşiği</b><span>Limitin <output id="warn-out">80</output>%'ine gelince Windows bildirimi gönder.</span></div>
+          <input type="range" min="50" max="100" step="5" data-bind="ai.warnAt" class="range">
+        </div>
+      </div>
+      <p class="fine">Anahtarlar Windows'un şifreleme altyapısıyla (DPAPI) şifrelenip sadece bu bilgisayarda saklanır, sadece Anthropic ve OpenAI'ın kendi sunucularına gönderilir.</p>
+    </section>
+  </main>
+
+  <div class="toast" id="toast"></div>
+  <script src="settings.js"></script>
+</body>
+</html>
