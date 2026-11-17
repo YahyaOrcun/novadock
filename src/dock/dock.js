@@ -173,6 +173,7 @@ widgets.apps = {
       d.onmouseenter = () => { if (n) preview.hoverIn(d, g); else showTip(d, g.name); };
       d.onmouseleave = () => { hideTip(); preview.hoverOut(); };
       d.onclick = () => { hideTip(); preview.cancel(); this.click(g); setTimeout(() => this.update(el), 300); };
+      d.oncontextmenu = e => { e.preventDefault(); hideTip(); preview.cancel(); jump.open(d, g, () => this.update(el)); };
       el.appendChild(d);
     });
   },
@@ -182,6 +183,64 @@ widgets.apps = {
     // Birden çok pencere varsa sıradakine geç, tek pencereyse öne getir / küçült
     const target = g.wins.length > 1 && idx >= 0 ? g.wins[(idx + 1) % g.wins.length] : g.wins[0];
     api.windows.activate(target.hwnd);
+  }
+};
+
+// ---------- Sağ tık menüsü (jump list) ----------
+const jump = {
+  open(anchor, g, refresh) {
+    const exe = g.pinned ? g.pinned.exe : (g.wins[0] && g.wins[0].exe);
+    togglePop('ctx:' + g.key, anchor, pop => this.render(pop, g, exe, null, refresh), 290);
+    if (!exe) return;
+    const pop = openPop.el;
+    api.apps.context(exe).then(ctx => {
+      if (!openPop || openPop.el !== pop) return;
+      this.render(pop, g, exe, ctx || {}, refresh);
+    });
+  },
+  render(pop, g, exe, ctx, refresh) {
+    const n = g.wins.length;
+    const name = (g.pinned && g.pinned.name) || (ctx && ctx.name) || g.name;
+    const pinned = g.pinned || (ctx && ctx.pinned);
+    const docIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg>';
+    const pinIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6l-1 5 3 3v2H7v-2l3-3z"/><path d="M12 14v6"/></svg>';
+    const closeIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+    let html = '';
+    if (!ctx) {
+      html += `<div class="jl-loading"><div class="spin"></div></div>`;
+    } else {
+      if (ctx.recent && ctx.recent.length) {
+        html += `<div class="jl-title">En Son</div><div class="menu jl">` + ctx.recent.map((r, i) =>
+          `<button data-r="${i}" title="${esc(r.path)}">${r.icon ? `<img src="${r.icon}" alt="">` : docIcon}<span>${esc(r.name)}</span></button>`).join('') + `</div>`;
+      }
+      if (ctx.tasks && ctx.tasks.length) {
+        html += `<div class="jl-title">Görevler</div><div class="menu jl">` + ctx.tasks.map(t =>
+          `<button data-t="${t.id}">${g.icon ? `<img src="${g.icon}" alt="">` : '<i class="jl-gap"></i>'}<span>${esc(t.label)}</span></button>`).join('') + `</div>`;
+      }
+    }
+    html += `<div class="jl-sep"></div><div class="menu jl">
+      <button data-a="launch">${g.icon ? `<img src="${g.icon}" alt="">` : '<i class="jl-gap"></i>'}<span>${esc(name)}</span></button>
+      ${exe || g.pinned ? `<button data-a="pin">${pinIcon}<span>${pinned ? "Dock'tan kaldır" : "Dock'a sabitle"}</span></button>` : ''}
+      ${n ? `<button data-a="close">${closeIcon}<span>${n > 1 ? `Tüm pencereleri kapat (${n})` : 'Pencereyi kapat'}</span></button>` : ''}
+    </div>`;
+    pop.innerHTML = html;
+    pop.classList.add('jumplist');
+    const done = () => { closePop(); setTimeout(refresh, 400); };
+    pop.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { api.apps.openRecent(ctx.recent[+b.dataset.r].path); done(); });
+    pop.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { api.apps.task(exe, b.dataset.t); done(); });
+    const act = pop.querySelectorAll('[data-a]');
+    act.forEach(b => b.onclick = async () => {
+      const a = b.dataset.a;
+      if (a === 'launch') {
+        if (g.pinned) api.apps.launch(g.pinned.path); else api.apps.launchExe(exe);
+      } else if (a === 'pin') {
+        if (pinned) await api.apps.unpin(g.pinned ? g.pinned.path : exe);
+        else await api.apps.pinExe(exe);
+      } else if (a === 'close') {
+        for (const w of g.wins) api.windows.close(w.hwnd);
+      }
+      done();
+    });
   }
 };
 

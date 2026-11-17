@@ -9,9 +9,10 @@ const system = require('./services/system');
 const media = require('./services/media');
 const audio = require('./services/audio');
 const network = require('./services/network');
+const jumplist = require('./services/jumplist');
 const { execFile } = require('child_process');
 
-const POPOVER_SPACE = 420; // Dock'un üstünde/altında açılan paneller için şeffaf alan (DIP)
+const POPOVER_SPACE = 480; // Dock'un üstünde/altında açılan paneller için şeffaf alan (DIP)
 
 let dock = null;
 let settingsWin = null;
@@ -325,11 +326,29 @@ async function iconForWindow(w) {
 }
 
 let lastWindowIds = new Set();
+let lastWindowExes = new Set();
+let lastRecent = new Set();
+
+function allowedExe(exe) {
+  if (!exe) return false;
+  const e = exe.toLowerCase();
+  if (lastWindowExes.has(e)) return true;
+  return (store.get().pinnedApps || []).some(a => targetExe(a.path) === e);
+}
+
+async function smallIcon(key, p) {
+  if (iconCache.has(key)) return iconCache.get(key);
+  let url = null;
+  try { const img = await app.getFileIcon(p, { size: 'small' }); if (!img.isEmpty()) url = img.toDataURL(); } catch {}
+  iconCache.set(key, url);
+  return url;
+}
 async function openWindows() {
   if (!store.get().showOpenWindows) return [];
   let wins = [];
   try { wins = win32.listWindows(); } catch (e) { console.error('[windows]', e); }
   lastWindowIds = new Set(wins.map(w => w.hwnd));
+  lastWindowExes = new Set(wins.filter(w => w.exe).map(w => w.exe.toLowerCase()));
   return Promise.all(wins.map(async w => ({ ...w, icon: await iconForWindow(w), exe: w.exe ? w.exe.toLowerCase() : null })));
 }
 
@@ -511,6 +530,41 @@ function registerIpc() {
       console.error('[thumbs]', e.message);
       return {};
     }
+  });
+  // Sağ tık menüsü
+  ipcMain.handle('apps:context', async (_e, exe) => {
+    if (!allowedExe(exe)) return null;
+    const recent = jumplist.recentFor(exe);
+    lastRecent = new Set(recent.map(r => r.path));
+    const pinned = (store.get().pinnedApps || []).some(a => targetExe(a.path) === exe.toLowerCase());
+    return {
+      name: await jumplist.friendlyName(exe),
+      tasks: jumplist.tasksFor(exe),
+      pinned,
+      recent: await Promise.all(recent.map(async r => ({
+        path: r.path, name: r.name, dir: r.dir,
+        icon: await smallIcon(r.dir ? 'small:dir' : 'small:' + (r.ext || r.path), r.path)
+      })))
+    };
+  });
+  ipcMain.handle('apps:task', (_e, exe, id) => allowedExe(exe) && jumplist.runTask(exe, String(id)));
+  ipcMain.handle('apps:launchExe', (_e, exe) => { if (allowedExe(exe)) { jumplist.launch(exe); return true; } return false; });
+  ipcMain.handle('apps:openRecent', (_e, p) => { if (lastRecent.has(p)) { shell.openPath(p); return true; } return false; });
+  ipcMain.handle('apps:pinExe', async (_e, exe) => {
+    if (!allowedExe(exe)) return false;
+    const list = store.get().pinnedApps || [];
+    if (!list.some(a => targetExe(a.path) === exe.toLowerCase())) {
+      list.push({ name: await jumplist.friendlyName(exe), path: exe });
+      store.update({ pinnedApps: list });
+      broadcast('settings:changed', store.publicSettings());
+    }
+    return true;
+  });
+  ipcMain.handle('apps:unpin', (_e, p) => {
+    const list = (store.get().pinnedApps || []).filter(a => a.path !== p);
+    store.update({ pinnedApps: list });
+    broadcast('settings:changed', store.publicSettings());
+    return true;
   });
   ipcMain.handle('apps:add', async () => {
     const r = await dialog.showOpenDialog(settingsWin || undefined, {

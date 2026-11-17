@@ -353,3 +353,14 @@ body[data-position="top"] .popover { animation-name: popTop; }
   -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #fff;
   box-shadow: 0 1px 6px rgba(0, 0, 0, .35); border: 0;
 }
+
+/* Sağ tık menüsü */
+.popover.jumplist { padding: 8px; }
+.jl-title { font-size: 11.5px; font-weight: 600; color: var(--fg-dim); padding: 6px 8px 4px; }
+.menu.jl { margin: 0; }
+.menu.jl button { padding: 7px 8px; }
+.menu.jl button img { width: 16px; height: 16px; flex-shrink: 0; }
+.menu.jl button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.jl-sep { height: 1px; background: var(--divider); margin: 6px 4px; }
+.jl-loading { display: grid; place-items: center; height: 60px; }
+.jl-gap { width: 16px; flex-shrink: 0; }

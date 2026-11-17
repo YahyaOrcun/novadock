@@ -7,6 +7,7 @@ Windows 10/11 için akıllı dock. Görev çubuğunun yerine geçer; açık penc
 ## Özellikler
 
 - **Uygulamalar ve açık pencereler:** Sabitlenmiş uygulamalar ve çalışan pencereler görev çubuğundaki gibi görünür. Tıklayınca pencere öne gelir, tekrar tıklayınca küçülür. Microsoft Store uygulamalarının simgeleri de desteklenir.
+- **Sağ tık menüsü:** Uygulamayla açılan son dosyalar, "Yeni pencere" / "Yeni gizli pencere" gibi görevler, sabitleme ve pencereleri kapatma.
 - **Pencere önizlemesi:** Simgenin üstüne gelince açık pencerelerin küçük görüntüleri çıkar. Pencere sayısı rozetle gösterilir, önizlemeden pencere kapatılabilir.
 - **Evcil hayvan:** Masaüstünde yaşayan bir kedi ya da köpek. Sürükleyip istediğin yere taşıyabilirsin. Tıklayınca zıplar, basılı tutunca sevilmiş gibi mırlar, fareni gözleriyle takip eder ve uzun süre dokunmazsan uyur.
 - **Spotify / müzik:** Albüm kapağı, şarkı, sanatçı ve ilerleme çubuğu Windows'un medya altyapısından okunur. Spotify Free'de de çalışır, API anahtarı gerekmez.
@@ -83,6 +84,7 @@ src/
     media.js         Windows medya oturumu (albüm kapağı, ilerleme)
     audio.js         Sistem ses seviyesi (Core Audio)
     network.js       Wi-Fi / Ethernet durumu
+    jumplist.js      Sağ tık menüsü: son dosyalar, görevler
     spotify.js       Spotify: medya oturumu, pencere başlığı, isteğe bağlı Web API
     ai.js            Claude Code kayıtları, Anthropic/OpenAI maliyet API'leri
     system.js        CPU/RAM

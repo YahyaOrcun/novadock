@@ -62,6 +62,11 @@ function init() {
       CloseHandle: kernel32.func('bool __stdcall CloseHandle(intptr_t h)'),
       DwmGetWindowAttribute: dwmapi.func('long __stdcall DwmGetWindowAttribute(intptr_t hwnd, uint32_t attr, void *out, uint32_t size)')
     });
+    // Dosya türünün varsayılan uygulaması
+    try {
+      const shlwapi = koffi.load('shlwapi.dll');
+      k.AssocQueryStringW = shlwapi.func('long __stdcall AssocQueryStringW(uint32_t flags, uint32_t str, str16 assoc, str16 extra, void *out, void *pcch)');
+    } catch {}
     // Pencere simgesini (HICON) resme çevirmek için
     const gdi32 = koffi.load('gdi32.dll');
     const ICONINFO = koffi.struct('ICONINFO', { fIcon: 'int32_t', xHotspot: 'uint32_t', yHotspot: 'uint32_t', hbmMask: 'intptr_t', hbmColor: 'intptr_t' });
@@ -200,6 +205,17 @@ function restoreTaskbar(originalState) {
   if (!tb) return;
   k.ShowWindow(tb, SW_SHOW);
   if (originalState != null) setTaskbarState(originalState);
+}
+
+// ---------- Dosya ilişkilendirmeleri ----------
+/** Bir uzantının (".pdf") varsayılan uygulamasının exe yolu */
+function assocExe(ext) {
+  if (!init() || !k.AssocQueryStringW) return null;
+  const buf = Buffer.alloc(2048);
+  const len = Buffer.alloc(4); len.writeUInt32LE(1024);
+  const hr = k.AssocQueryStringW(0, 2, ext, null, buf, len); // ASSOCSTR_EXECUTABLE
+  if (hr !== 0) return null;
+  return buf.toString('utf16le', 0, Math.max(0, len.readUInt32LE(0) - 1) * 2) || null;
 }
 
 // ---------- Klavye kısayolları ----------
@@ -368,4 +384,4 @@ function windowIcon(hwnd) {
   return out;
 }
 
-module.exports = { isWin, shortcut, listWindows, activateWindow, closeWindow, windowIcon, reserve, release, getTaskbarState, applyTaskbarMode, restoreTaskbar, mediaKey };
+module.exports = { isWin, shortcut, assocExe, listWindows, activateWindow, closeWindow, windowIcon, reserve, release, getTaskbarState, applyTaskbarMode, restoreTaskbar, mediaKey };

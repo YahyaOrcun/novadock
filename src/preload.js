@@ -44,6 +44,12 @@ contextBridge.exposeInMainWorld('nova', {
     launch: (p) => ipcRenderer.invoke('apps:launch', p),
     add: () => ipcRenderer.invoke('apps:add'),
     importTaskbar: () => ipcRenderer.invoke('apps:importTaskbar'),
+    context: (exe) => ipcRenderer.invoke('apps:context', exe),
+    task: (exe, id) => ipcRenderer.invoke('apps:task', exe, id),
+    launchExe: (exe) => ipcRenderer.invoke('apps:launchExe', exe),
+    openRecent: (p) => ipcRenderer.invoke('apps:openRecent', p),
+    pinExe: (exe) => ipcRenderer.invoke('apps:pinExe', exe),
+    unpin: (p) => ipcRenderer.invoke('apps:unpin', p),
     set: (list) => ipcRenderer.invoke('apps:set', list)
   },
   windows: {
