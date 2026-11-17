@@ -202,6 +202,22 @@ function restoreTaskbar(originalState) {
   if (originalState != null) setTaskbarState(originalState);
 }
 
+// ---------- Klavye kısayolları ----------
+const SHORTCUTS = {
+  start: [0x5B],               // Win
+  quick: [0x5B, 0x41],         // Win + A (hızlı ayarlar)
+  notifications: [0x5B, 0x4E], // Win + N (bildirimler)
+  desktop: [0x5B, 0x44]        // Win + D (masaüstünü göster)
+};
+function shortcut(name) {
+  if (!init()) return false;
+  const keys = SHORTCUTS[name];
+  if (!keys) return false;
+  for (const vk of keys) k.keybd_event(vk, 0, 0, 0);
+  for (const vk of [...keys].reverse()) k.keybd_event(vk, 0, KEYEVENTF_KEYUP, 0);
+  return true;
+}
+
 // ---------- Medya tuşları ----------
 function mediaKey(name) {
   if (!init()) return false;
@@ -352,4 +368,4 @@ function windowIcon(hwnd) {
   return out;
 }
 
-module.exports = { isWin, listWindows, activateWindow, closeWindow, windowIcon, reserve, release, getTaskbarState, applyTaskbarMode, restoreTaskbar, mediaKey };
+module.exports = { isWin, shortcut, listWindows, activateWindow, closeWindow, windowIcon, reserve, release, getTaskbarState, applyTaskbarMode, restoreTaskbar, mediaKey };

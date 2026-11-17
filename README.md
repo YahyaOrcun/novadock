@@ -18,6 +18,8 @@ Windows 10/11 için akıllı dock. Görev çubuğunun yerine geçer; açık penc
 - **Sistem:** CPU, RAM ve pil.
 - **Saat ve takvim**
 - **Güç menüsü:** Kilitle, uyku, oturumu kapat, yeniden başlat, kapat.
+- **Başlat ve hızlı ayarlar:** Başlat menüsü, Windows hızlı ayarlar (Wi-Fi, Bluetooth, parlaklık) ve bildirim paneli düğmeleri.
+- **Wi-Fi ve ses:** Bağlı ağın adı ve sinyal gücü, ses seviyesi çubuğu, sessize alma. Fare tekerleğiyle ses ayarlanabilir.
 - **Kontrol paneli:** 4 stil (Glass, Midnight, White, Black), hap ya da tam genişlik şekli, üst ya da alt konum, widget'ları açma/kapama ve sıralama.
 - **Windows ile uyum:** Dock, görev çubuğu gibi ekranda yer ayırır. Windows görev çubuğunu otomatik gizler, çıkınca eski haline getirir. Tam ekran oyun ve videolarda kendini gizler.
 
@@ -79,6 +81,8 @@ src/
   preload.js         Arayüzle güvenli köprü
   services/
     media.js         Windows medya oturumu (albüm kapağı, ilerleme)
+    audio.js         Sistem ses seviyesi (Core Audio)
+    network.js       Wi-Fi / Ethernet durumu
     spotify.js       Spotify: medya oturumu, pencere başlığı, isteğe bağlı Web API
     ai.js            Claude Code kayıtları, Anthropic/OpenAI maliyet API'leri
     system.js        CPU/RAM

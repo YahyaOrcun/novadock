@@ -19,6 +19,14 @@ contextBridge.exposeInMainWorld('nova', {
     onLayout: on('dock:layout')
   },
   quit: () => ipcRenderer.invoke('app:quit'),
+  audio: {
+    get: () => ipcRenderer.invoke('audio:get'),
+    set: (pct) => ipcRenderer.invoke('audio:set', pct),
+    mute: (m) => ipcRenderer.invoke('audio:mute', m)
+  },
+  net: { status: (force) => ipcRenderer.invoke('net:status', force) },
+  shortcut: (name) => ipcRenderer.invoke('sys:shortcut', name),
+  openMs: (uri) => ipcRenderer.invoke('open:ms', uri),
   power: (action) => ipcRenderer.invoke('power:action', action),
   openSettings: (section) => ipcRenderer.invoke('open:settings', section),
   openUrl: (url) => ipcRenderer.invoke('open:url', url),

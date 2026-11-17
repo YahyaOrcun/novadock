@@ -18,6 +18,11 @@ const I = {
   plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
   timer: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>',
   spark: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 6.1L20 10l-6.1 1.9L12 18l-1.9-6.1L4 10l6.1-1.9z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z" opacity=".6"/></svg>',
+  winlogo: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8.2" height="8.2" rx="1.6"/><rect x="12.8" y="3" width="8.2" height="8.2" rx="1.6"/><rect x="3" y="12.8" width="8.2" height="8.2" rx="1.6"/><rect x="12.8" y="12.8" width="8.2" height="8.2" rx="1.6"/></svg>',
+  sliders: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>',
+  bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>',
+  ethernet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="13" rx="2"/><path d="M7 16v4M12 16v4M17 16v4M7 8h10M7 12h10"/></svg>',
+  wifiOff: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 8.8a15 15 0 0 1 20 0M5.3 12.4a10 10 0 0 1 13.4 0M8.6 15.9a5 5 0 0 1 6.8 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/><path d="M3 3l18 18" stroke="var(--red)"/></svg>',
   power: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg>',
   lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
   moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>',
@@ -514,6 +519,147 @@ widgets.clock = {
       </div><div class="cal">${cells}</div>`;
     pop.querySelector('#cal-prev').onclick = () => { this.viewMonth = new Date(y, m - 1, 1); this.renderPop(pop); };
     pop.querySelector('#cal-next').onclick = () => { this.viewMonth = new Date(y, m + 1, 1); this.renderPop(pop); };
+  }
+};
+
+// ---------- Başlat ----------
+widgets.start = {
+  mount(el) {
+    el.className = 'w w-start';
+    el.style.padding = '0 4px';
+    el.innerHTML = `
+      <button class="icon-btn big start-btn" data-k="start" title="Başlat">${I.winlogo}</button>
+      <button class="icon-btn" data-k="quick" title="Hızlı ayarlar (Wi-Fi, Bluetooth, parlaklık…)">${I.sliders}</button>
+      <button class="icon-btn" data-k="notifications" title="Bildirimler ve takvim">${I.bell}</button>`;
+    el.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { closePop(); api.shortcut(b.dataset.k); });
+  }
+};
+
+// ---------- Wi-Fi ve ses ----------
+function wifiIcon(signal) {
+  const lvl = signal == null ? 4 : signal >= 75 ? 4 : signal >= 50 ? 3 : signal >= 25 ? 2 : 1;
+  const on = n => lvl >= n ? 'currentColor' : 'var(--fg-faint)';
+  return `<svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round">
+    <path d="M2 8.8a15 15 0 0 1 20 0" stroke="${on(4)}"/><path d="M5.3 12.4a10 10 0 0 1 13.4 0" stroke="${on(3)}"/>
+    <path d="M8.6 15.9a5 5 0 0 1 6.8 0" stroke="${on(2)}"/><circle cx="12" cy="19.5" r="1.4" fill="${on(1)}" stroke="none"/></svg>`;
+}
+function volIcon(v, muted) {
+  const body = '<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor" stroke="none"/>';
+  if (muted || v === 0) return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">${body}<path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>`;
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">${body}
+    <path d="M15.5 9.5a3.5 3.5 0 0 1 0 5" ${v < 1 ? 'opacity=".3"' : ''}/>${v > 33 ? '<path d="M18 7a7 7 0 0 1 0 10"/>' : ''}${v > 66 ? '<path d="M20.5 4.5a10.5 10.5 0 0 1 0 15"/>' : ''}</svg>`;
+}
+
+widgets.quick = {
+  net: null, vol: null, wheelTimer: null,
+  mount(el) {
+    el.className = 'w w-quick';
+    el.style.padding = '0 4px';
+    el.innerHTML = `
+      <button class="icon-btn q-net" title="Ağ"></button>
+      <button class="icon-btn q-vol" title="Ses"></button><span class="q-pct value"></span>`;
+    const netBtn = el.querySelector('.q-net'), volBtn = el.querySelector('.q-vol');
+    netBtn.onclick = () => togglePop('net', netBtn, pop => this.renderNet(pop), 270);
+    volBtn.onclick = () => togglePop('vol', volBtn, pop => this.renderVol(pop), 270);
+    el.querySelector('.q-pct').onclick = () => volBtn.click();
+    // Fare tekerleğiyle ses
+    const onWheel = e => {
+      if (!this.vol) return;
+      e.preventDefault();
+      const v = Math.max(0, Math.min(100, this.vol.volume + (e.deltaY < 0 ? 2 : -2)));
+      this.vol = { volume: v, muted: false };
+      this.render(el);
+      refreshPop('vol');
+      clearTimeout(this.wheelTimer);
+      this.wheelTimer = setTimeout(() => api.audio.set(v), 60);
+    };
+    volBtn.addEventListener('wheel', onWheel, { passive: false });
+    el.querySelector('.q-pct').addEventListener('wheel', onWheel, { passive: false });
+    window.addEventListener('online', () => this.updateNet(el, true));
+    window.addEventListener('offline', () => this.updateNet(el, true));
+    this.updateNet(el); this.updateVol(el);
+    timers.push(setInterval(() => this.updateNet(el), 15000));
+    timers.push(setInterval(() => this.updateVol(el), 2500));
+  },
+  async updateNet(el, force) {
+    try { this.net = await api.net.status(force); } catch {}
+    if (!navigator.onLine && this.net) this.net = { ...this.net, offline: true };
+    this.render(el); refreshPop('net');
+  },
+  async updateVol(el) {
+    if (openPop && openPop.id === 'vol' && openPop.dragging) return;
+    try { const v = await api.audio.get(); if (v) this.vol = v; } catch {}
+    this.render(el); refreshPop('vol');
+  },
+  render(el) {
+    const n = this.net || {};
+    const netBtn = el.querySelector('.q-net');
+    netBtn.innerHTML = n.type === 'wifi' ? wifiIcon(n.signal) : n.type === 'ethernet' ? I.ethernet : I.wifiOff;
+    netBtn.title = n.type === 'wifi' ? `${n.ssid || 'Wi-Fi'}${n.signal != null ? ` · %${n.signal}` : ''}` : n.type === 'ethernet' ? 'Kablolu bağlantı' : 'Bağlı değil';
+    const v = this.vol;
+    el.querySelector('.q-vol').innerHTML = volIcon(v ? v.volume : 50, v && v.muted);
+    el.querySelector('.q-pct').textContent = v ? (v.muted ? 'Sessiz' : v.volume + '%') : '';
+  },
+  renderNet(pop) {
+    const n = this.net || {};
+    let body;
+    if (n.type === 'wifi') {
+      body = `<div class="card"><div class="row"><span class="k">Wi-Fi</span><span class="v ok">Bağlı</span></div>
+        <div class="big-num" style="font-size:18px;margin-top:4px">${esc(n.ssid || 'Kablosuz ağ')}</div>
+        ${n.signal != null ? `<div class="hbar"><i style="width:${n.signal}%;background:${n.signal >= 50 ? 'var(--green)' : n.signal >= 25 ? 'var(--amber)' : 'var(--red)'}"></i></div><div class="muted">Sinyal gücü %${n.signal}</div>` : ''}</div>`;
+    } else if (n.type === 'ethernet') {
+      body = `<div class="card"><div class="row"><span class="k">Ethernet</span><span class="v ok">Bağlı</span></div><div class="big-num" style="font-size:18px;margin-top:4px">${esc(n.name || 'Kablolu ağ')}</div></div>`;
+    } else {
+      body = `<div class="card"><div class="row"><span class="k">Ağ</span><span class="err">Bağlı değil</span></div><div class="muted" style="margin-top:6px">Bir Wi-Fi ağına bağlanmak için aşağıdaki düğmeyi kullan.</div></div>`;
+    }
+    pop.innerHTML = `<div class="pop-title">Ağ</div>${body}
+      <div class="menu" style="margin:6px -6px -6px">
+        <button data-o="ms-availablenetworks:">${wifiIcon(null)}<span>Wi-Fi ağlarını göster</span></button>
+        <button data-o="ms-settings:network-status">${I.gear}<span>Ağ ayarları</span></button>
+        <button data-s="quick">${I.sliders}<span>Hızlı ayarlar</span></button>
+      </div>`;
+    pop.querySelectorAll('[data-o]').forEach(b => b.onclick = () => { closePop(); api.openMs(b.dataset.o); });
+    pop.querySelector('[data-s]').onclick = () => { closePop(); api.shortcut('quick'); };
+  },
+  renderVol(pop) {
+    const v = this.vol || { volume: 0, muted: false };
+    if (pop.querySelector('.vol-range')) {
+      // Kaydırma sırasında yeniden çizme, sadece değerleri güncelle
+      if (!openPop.dragging) pop.querySelector('.vol-range').value = v.volume;
+      pop.querySelector('.vol-num').textContent = v.muted ? 'Sessiz' : v.volume + '%';
+      pop.querySelector('.vol-mute').innerHTML = volIcon(v.volume, v.muted);
+      pop.querySelector('.vol-range').style.setProperty('--p', v.volume + '%');
+      return;
+    }
+    pop.innerHTML = `<div class="pop-title">Ses <span class="vol-num" style="text-transform:none;color:var(--fg)">${v.muted ? 'Sessiz' : v.volume + '%'}</span></div>
+      <div class="vol-row">
+        <button class="icon-btn big vol-mute" title="Sessize al / aç">${volIcon(v.volume, v.muted)}</button>
+        <input type="range" class="vol-range" min="0" max="100" step="1" value="${v.volume}" style="--p:${v.volume}%">
+      </div>
+      <div class="menu" style="margin:10px -6px -6px">
+        <button data-o="ms-settings:sound">${I.gear}<span>Ses ayarları</span></button>
+        <button data-o="ms-settings:apps-volume">${I.sliders}<span>Ses karıştırıcı</span></button>
+      </div>`;
+    const range = pop.querySelector('.vol-range');
+    let t = null;
+    range.oninput = () => {
+      openPop.dragging = true;
+      const val = Number(range.value);
+      this.vol = { volume: val, muted: false };
+      range.style.setProperty('--p', val + '%');
+      pop.querySelector('.vol-num').textContent = val + '%';
+      pop.querySelector('.vol-mute').innerHTML = volIcon(val, false);
+      this.render(bar.querySelector('.w-quick'));
+      clearTimeout(t);
+      t = setTimeout(() => api.audio.set(val), 40);
+    };
+    range.onchange = () => { if (openPop) openPop.dragging = false; };
+    pop.querySelector('.vol-mute').onclick = async () => {
+      const r = await api.audio.mute(!(this.vol && this.vol.muted));
+      if (r) this.vol = r;
+      this.render(bar.querySelector('.w-quick')); this.renderVol(pop);
+    };
+    pop.querySelectorAll('[data-o]').forEach(b => b.onclick = () => { closePop(); api.openMs(b.dataset.o); });
   }
 };
 

@@ -13,10 +13,12 @@ const DEFAULTS = {
   taskbarMode: 'autohide',     // Windows görev çubuğu: 'none' | 'autohide' | 'hide'
   launchAtStartup: false,
   widgets: [
+    { id: 'start', enabled: true },
     { id: 'apps', enabled: true },
     { id: 'spotify', enabled: true },
     { id: 'ai', enabled: true },
     { id: 'timer', enabled: true },
+    { id: 'quick', enabled: true },
     { id: 'system', enabled: true },
     { id: 'clock', enabled: true },
     { id: 'power', enabled: true }
@@ -47,9 +49,14 @@ function load() {
     const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
     data = deepMerge(structuredClone(DEFAULTS), raw);
     // Sonradan eklenen widget'ları eski ayar dosyalarına da ekle
-    for (const w of DEFAULTS.widgets) {
-      if (!data.widgets.find(x => x.id === w.id)) data.widgets.push({ ...w });
-    }
+    // Sonradan eklenen widget'ları varsayılan sıradaki yerlerine yerleştir
+    DEFAULTS.widgets.forEach((w, i) => {
+      if (!data.widgets.find(x => x.id === w.id)) {
+        const prev = DEFAULTS.widgets[i - 1];
+        const at = prev ? data.widgets.findIndex(x => x.id === prev.id) + 1 : 0;
+        data.widgets.splice(at > 0 || !prev ? at : data.widgets.length, 0, { ...w });
+      }
+    });
   } catch {
     data = structuredClone(DEFAULTS);
   }

@@ -7,6 +7,8 @@ const spotify = require('./services/spotify');
 const ai = require('./services/ai');
 const system = require('./services/system');
 const media = require('./services/media');
+const audio = require('./services/audio');
+const network = require('./services/network');
 const { execFile } = require('child_process');
 
 const POPOVER_SPACE = 420; // Dock'un üstünde/altında açılan paneller için şeffaf alan (DIP)
@@ -421,6 +423,15 @@ function registerIpc() {
   });
 
   ipcMain.handle('app:quit', () => app.quit());
+
+  // Ses, ağ, Windows kısayolları
+  ipcMain.handle('audio:get', () => audio.get());
+  ipcMain.handle('audio:set', (_e, pct) => audio.setVolume(Number(pct) || 0));
+  ipcMain.handle('audio:mute', (_e, m) => audio.setMute(!!m));
+  ipcMain.handle('net:status', (_e, force) => network.status(!!force));
+  ipcMain.handle('sys:shortcut', (_e, name) => win32.shortcut(String(name)));
+  const MS_URIS = new Set(['ms-availablenetworks:', 'ms-settings:network-wifi', 'ms-settings:network-status', 'ms-settings:sound', 'ms-settings:apps-volume', 'ms-settings:bluetooth']);
+  ipcMain.handle('open:ms', (_e, uri) => { if (MS_URIS.has(uri)) shell.openExternal(uri); });
   ipcMain.handle('power:action', (_e, action) => {
     if (process.platform !== 'win32') return false;
     const run = (cmd, args) => execFile(cmd, args, { windowsHide: true }, () => {});
@@ -551,6 +562,7 @@ app.on('window-all-closed', e => e.preventDefault()); // tray'de çalışmaya de
 
 function cleanup() {
   try { media.stop(); } catch {}
+  try { audio.stop(); } catch {}
   try { win32.release(); } catch {}
   restoreTaskbar();
 }

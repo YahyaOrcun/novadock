@@ -3,6 +3,8 @@ const api = window.nova;
 let S = null;
 
 const WIDGET_META = {
+  start: { name: 'Başlat', desc: 'Başlat menüsü ve Windows hızlı ayarlar düğmeleri', ic: '⊞' },
+  quick: { name: 'Wi-Fi ve ses', desc: 'Ağ durumu, ses seviyesi ve sessize alma', ic: '📶' },
   apps: { name: 'Uygulamalar', desc: 'Sabitlenmiş uygulama simgeleri', ic: '⬚' },
   spotify: { name: 'Spotify', desc: 'Çalan şarkı ve oynatma kontrolleri', ic: '♫' },
   ai: { name: 'AI Kullanımı', desc: 'Claude Code token penceresi, API harcaması', ic: '✦' },
