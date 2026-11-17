@@ -10,7 +10,7 @@ const DEFAULTS = {
   style: 'glass',              // 'glass' | 'midnight' | 'white' | 'black'
   height: 56,
   reserveSpace: true,          // Ekranda taskbar gibi yer ayır (pencereler altına girmez)
-  taskbarMode: 'autohide',     // Windows görev çubuğu: 'none' | 'autohide' | 'hide'
+  taskbarMode: 'hide',     // Windows görev çubuğu: 'none' | 'autohide' | 'hide'
   launchAtStartup: false,
   widgets: [
     { id: 'start', enabled: true },

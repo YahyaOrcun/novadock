@@ -37,6 +37,7 @@ function init() {
       APPBARDATA,
       SHAppBarMessage: shell32.func('SHAppBarMessage', 'uintptr_t', ['uint32_t', koffi.inout(koffi.pointer(APPBARDATA))]),
       FindWindowW: user32.func('FindWindowW', 'intptr_t', ['str16', 'str16']),
+      FindWindowExW: user32.func('FindWindowExW', 'intptr_t', ['intptr_t', 'intptr_t', 'str16', 'str16']),
       ShowWindow: user32.func('ShowWindow', 'bool', ['intptr_t', 'int']),
       keybd_event: user32.func('keybd_event', 'void', ['uint8_t', 'uint8_t', 'uint32_t', 'uintptr_t'])
     };
@@ -196,14 +197,32 @@ function applyTaskbarMode(mode, originalState) {
   } else if (originalState != null) {
     setTaskbarState(originalState);
   }
-  k.ShowWindow(tb, mode === 'hide' ? SW_HIDE : SW_SHOW);
+  for (const h of allTaskbars()) k.ShowWindow(h, mode === 'hide' ? SW_HIDE : SW_SHOW);
+}
+
+// Ana ve ikincil ekranlardaki tüm görev çubukları
+function allTaskbars() {
+  const list = [];
+  const main = taskbarHwnd();
+  if (main) list.push(main);
+  let h = 0;
+  for (let i = 0; i < 8; i++) {
+    h = k.FindWindowExW(0, h, 'Shell_SecondaryTrayWnd', null);
+    if (!h) break;
+    list.push(h);
+  }
+  return list;
+}
+
+/** "Tamamen gizle" modunda Windows görev çubuğu kendiliğinden geri gelirse tekrar gizler */
+function enforceHidden() {
+  if (!init()) return;
+  for (const h of allTaskbars()) if (k.IsWindowVisible(h)) k.ShowWindow(h, SW_HIDE);
 }
 
 function restoreTaskbar(originalState) {
   if (!init()) return;
-  const tb = taskbarHwnd();
-  if (!tb) return;
-  k.ShowWindow(tb, SW_SHOW);
+  for (const h of allTaskbars()) k.ShowWindow(h, SW_SHOW);
   if (originalState != null) setTaskbarState(originalState);
 }
 
@@ -384,4 +403,4 @@ function windowIcon(hwnd) {
   return out;
 }
 
-module.exports = { isWin, shortcut, assocExe, listWindows, activateWindow, closeWindow, windowIcon, reserve, release, getTaskbarState, applyTaskbarMode, restoreTaskbar, mediaKey };
+module.exports = { isWin, shortcut, assocExe, enforceHidden, listWindows, activateWindow, closeWindow, windowIcon, reserve, release, getTaskbarState, applyTaskbarMode, restoreTaskbar, mediaKey };

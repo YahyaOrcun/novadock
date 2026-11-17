@@ -607,6 +607,10 @@ app.whenReady().then(() => {
   screen.on('display-added', () => layoutDock());
   screen.on('display-removed', () => { layoutDock(); createPet(); });
   setInterval(checkAiWarnings, 2 * 60 * 1000);
+  // "Tamamen gizle" modunda Windows görev çubuğunu gizli tut
+  setInterval(() => {
+    if (dockVisible && store.get().taskbarMode === 'hide') { try { win32.enforceHidden(); } catch {} }
+  }, 1200);
   setTimeout(checkAiWarnings, 15000);
   // İlk açılışta kontrol panelini göster
   if (!store.get()._welcomed) { store.update({ _welcomed: true }); openSettings('general'); }
